@@ -48,7 +48,7 @@ const CustomForm: React.FC<CustomFormProps> = (props: CustomFormProps) => {
         return options![name];
     }
 
-    const renderFormItem = (field: CustomFormField<any>): React.ReactNode => {
+    const renderFormItem = (field: CustomFormField<any>, index: number): React.ReactNode => {
         //Nếu field hide là true, không render
         const hide = callOrVar(field.hide, [values]) as boolean;
         if (hide === true) return <></>;
@@ -83,7 +83,7 @@ const CustomForm: React.FC<CustomFormProps> = (props: CustomFormProps) => {
         const itemProps = {label, name, initialValue, validateStatus, help, disabled};
         let node: React.ReactNode = <></>;
         if (component) {
-            node = <CustomFormItem {...itemProps} component={component} />;
+            node = <CustomFormItem key={index} {...itemProps} component={component}/>;
         } else {
             switch (type) {
                 case "divider":
@@ -106,6 +106,7 @@ const CustomForm: React.FC<CustomFormProps> = (props: CustomFormProps) => {
                     
                     if (type === "select") node = (
                         <CustomSelect
+                            key={index}
                             {...itemProps}
                             multiple={multiple}
                             showSearch={showSearch}
@@ -114,6 +115,7 @@ const CustomForm: React.FC<CustomFormProps> = (props: CustomFormProps) => {
                     );
                     else if (type === "treeselect") node = (
                         <CustomTreeSelect
+                            key={index}
                             {...itemProps}
                             multiple={multiple}
                             showSearch={showSearch}
@@ -126,16 +128,16 @@ const CustomForm: React.FC<CustomFormProps> = (props: CustomFormProps) => {
                     //Chuyển đổi ngày sang moment
                     const format = type === "date" ? "YYYY/MM/DD" : "YYYY/MM/DD HH:mm:ss";
                     initialValue = initialValue && moment(initialValue, format);
-                    node = <CustomDatePicker showTime={type === "datetime"} {...itemProps} initialValue={initialValue} />
+                    node = <CustomDatePicker key={index} showTime={type === "datetime"} {...itemProps} initialValue={initialValue} />
                     break;
                 case "switch":
-                    node = <CustomSwitch {...itemProps} defaultChecked={initialValue} />
+                    node = <CustomSwitch key={index} {...itemProps} defaultChecked={initialValue} />
                     break;
                 case "hidden":
-                    node = <CustomFormItem style={{display: "none"}} {...itemProps} component={<Input {...itemProps} type="hidden" />} />
+                    node = <CustomFormItem key={index} style={{display: "none"}} {...itemProps} component={<Input {...itemProps} type="hidden" />} />
                     break;
                 default:
-                    node = <CustomInput {...itemProps} type={inputType} />;
+                    node = <CustomInput key={index} {...itemProps} type={inputType} />;
                     break;
             }
         }
@@ -157,7 +159,7 @@ const CustomForm: React.FC<CustomFormProps> = (props: CustomFormProps) => {
             onValuesChange={handleValuesChange}
         >
             {form?.map((field, index) =>
-                renderFormItem(field)
+                renderFormItem(field, index)
             )}
 
             {(!hideSubmitButton || hideSubmitButton === false) && (

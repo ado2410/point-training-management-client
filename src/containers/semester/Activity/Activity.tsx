@@ -1,11 +1,11 @@
 import Index from "../../../templates/Index";
-import {Button, Select} from "antd";
+import {Button, Select, Tooltip} from "antd";
 import {useNavigate, useSearchParams} from "react-router-dom";
 import {CheckOutlined} from "@ant-design/icons";
 import { getActivityType } from "../../../utils/activity";
-import { activityCanModify, activityFormFields, activityTableColumns, preInsertAndUpdate } from "./Activity.constants";
+import { activityCanModify, activityCanModifyAttendance, activityFormFields, activityTableColumns, preInsertAndUpdate } from "./Activity.constants";
 import { useSelector } from "react-redux";
-import { isAdmin, isImporter, UserType } from "../../../store/slices/auth/auth.constants";
+import { isAdmin, isImporter } from "../../../store/slices/auth/auth.constants";
 import { useState } from "react";
 
 enum ShowType {
@@ -28,7 +28,7 @@ const Activity: React.FC<ActivityProps> = (props: ActivityProps) => {
 
     const buttons = (
         <>
-            <Button onClick={() => navigate(`attendance?semester=${semesterId}&activity_type=${activityTypeId}`)} icon={<CheckOutlined/>}>Điểm danh</Button>,
+            {/* <Button onClick={() => navigate(`attendance?semester=${semesterId}&activity_type=${activityTypeId}`)} icon={<CheckOutlined/>}>Điểm danh</Button>, */}
             {isImporter(auth) && (
                 <Select defaultValue={showOption} onChange={setShowOption}>
                     <Select.Option value={ShowType.ALL}>Hiển thị tất cả</Select.Option>
@@ -45,7 +45,11 @@ const Activity: React.FC<ActivityProps> = (props: ActivityProps) => {
     }
 
     const listButtons = (record: Activity) => (
-        activityCanModify(record) ? <Button onClick={() => navigate(`attendance?activity=${record.id}`)} icon={<CheckOutlined/>}/> : <></>
+        activityCanModifyAttendance(record) ? (
+            <Tooltip title="Đánh giá">
+                <Button onClick={() => navigate(`attendance?activity=${record.id}`)} icon={<CheckOutlined/>}/>
+            </Tooltip>
+        ) : <></>
     );
 
     const filterData = (item: Activity) => {
@@ -80,6 +84,7 @@ const Activity: React.FC<ActivityProps> = (props: ActivityProps) => {
                 canDelete={activityCanModify}
                 filterData={filterData}
                 canCreate={canCreate()}
+                tableProps={{scroll: {y: "calc(100vh - 258px)"}}}
             />
         </>
     );

@@ -12,7 +12,7 @@ const CustomTreeSelect: React.FC<CustomTreeSelectProps> = (props: CustomTreeSele
 
     const renderTreeSelectItem = (options: CustomTreeSelectOption[] | undefined) =>
         options?.map((option, index) => (
-            <TreeNode key={index} value={option.id} title={option.name}>
+            <TreeNode key={index} value={option.id} title={option.name} disabled={option.disabled || false}>
                 {option.children ? (
                     renderTreeSelectItem(option.children)
                 ) : (

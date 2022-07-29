@@ -1,16 +1,15 @@
 import { Tag } from "antd";
 import { Link } from "react-router-dom";
-import { getFullGroupOptions } from "./Group.actions";
 
 export const groupRoutes: CustomBreadCrumbRoute[] = [
-    {name: "Quản lý ngành học", path: "/majors"},
+    {name: "Quản lý nhóm", path: "/majors"},
 ];
 
 export const groupTableColumns = [
     {
         title: "Mã nhóm",
-        dataIndex: "code",
-        key: "code",
+        dataIndex: "full_code",
+        key: "full_code",
         width: 150,
     },
     {
@@ -25,11 +24,25 @@ export const groupTableColumns = [
         title: "Quyền truy cập",
         dataIndex: "user_groups",
         key: "user_groups",
-        render: (_text: string, record: Group) => record.group_users.map(userGroup => <Tag>{userGroup.user.first_name} {userGroup.user.last_name}</Tag>),
+        render: (_text: string, record: Group) => record.group_users.map((userGroup, index) => <Tag key={index}>{userGroup.user.first_name} {userGroup.user.last_name}</Tag>),
     },
 ];
 
-export const groupFormFields = (group: Group | undefined): CustomFormField<Group>[] => [
+export const groupFormFields = (groupId: string | undefined): CustomFormField<Group>[] => [
+    // {
+    //     label: "Thuộc nhóm",
+    //     name: "group_id",
+    //     type: "treeselect",
+    //     showSearch: true,
+    //     options: "groups",
+    //     initialValue: group ? group.id : null,
+    // },
+    {
+        label: '',
+        name: "group_id",
+        type: "hidden",
+        initialValue: groupId,
+    },
     {
         label: "Mã nhóm",
         name: "code",
@@ -37,14 +50,6 @@ export const groupFormFields = (group: Group | undefined): CustomFormField<Group
     {
         label: "Tên nhóm",
         name: "name",
-    },
-    {
-        label: "Thuộc nhóm",
-        name: "group_id",
-        type: "treeselect",
-        showSearch: true,
-        options: "groups",
-        initialValue: group ? group.id : null,
     },
     {
         label: "Quyền truy cập",

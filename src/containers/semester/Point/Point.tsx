@@ -14,6 +14,7 @@ import { getDescription, getReason } from "./Point.actions";
 import { getPointDataService } from "./Point.services";
 import { pointTableColumns } from "./Point.constants";
 import "../../../styles/styles.css";
+import { UserOptions } from "jspdf-autotable";
 
 const Point: React.FC<PointProps> = (props: PointProps) => {
     const [searchParams] = useSearchParams();
@@ -41,7 +42,7 @@ const Point: React.FC<PointProps> = (props: PointProps) => {
 
         flattenData.push({
             type: "sum",
-            title: "Tổng cộng",
+            title: "TỔNG CỘNG",
             point: pointSum,
             max_point: maxPointSum,
             id: 0,
@@ -72,6 +73,7 @@ const Point: React.FC<PointProps> = (props: PointProps) => {
             unit: "cm",
             format: "a4",
         }) as any;
+        doc.setProperties({ title: 'Phiếu đánh giá điểm rèn luyện' });
 
         doc.addFileToVFS('TimesNewRomanNormal.ttf', TimesNewRomanNormal);
         doc.addFileToVFS('TimesNewRomanBold.ttf', TimesNewRomanBold);
@@ -84,30 +86,30 @@ const Point: React.FC<PointProps> = (props: PointProps) => {
 
         doc.setFont("Times New Roman", "normal");
         doc.setFontSize(12);
-        doc.text(5, 1, "ĐẠI HỌC ĐÀ NẴNG", {align: "center"});
+        doc.text(5, 2, "ĐẠI HỌC ĐÀ NẴNG", {align: "center"});
 
         doc.setFont("Times New Roman", "bold");
-        doc.text(5, 1.6, "PHÂN HIỆU ĐHĐN TẠI KON TUM", {align: "center"});
+        doc.text(5, 2.6, "PHÂN HIỆU ĐHĐN TẠI KON TUM", {align: "center"});
         doc.setLineWidth(0.025);
-        doc.line(3, 1.8, 7, 1.8);
+        doc.line(3, 2.8, 7, 2.8);
 
-        doc.text(15, 1, "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", {align: "center"});
-        doc.text(15, 1.6, "Độc lập - Tự do - Hạnh phúc", {align: "center"});
-        doc.line(13, 1.8, 17, 1.8);
+        doc.text(15, 2, "CỘNG HÒA XÃ HỘI CHỦ NGHĨA VIỆT NAM", {align: "center"});
+        doc.text(15, 2.6, "Độc lập - Tự do - Hạnh phúc", {align: "center"});
+        doc.line(13, 2.8, 17, 2.8);
 
         doc.setFont("Times New Roman", "bold");
         doc.setFontSize(13);
-        doc.text(10, 2.6, "PHIẾU ĐÁNH GIÁ KẾT QUẢ RÈN LUYỆN CỦA SINH VIÊN", {align: "center"});
-        doc.text(10, 3.2, `HỌC KỲ ${semester?.name} NĂM HỌC ${semester?.year?.name}`, {align: "center"});
+        doc.text(10, 3.6, "PHIẾU ĐÁNH GIÁ KẾT QUẢ RÈN LUYỆN CỦA SINH VIÊN", {align: "center"});
+        doc.text(10, 4.2, `HỌC KỲ ${semester?.name} NĂM HỌC ${semester?.year?.name}`, {align: "center"});
 
         doc.setFont("Times New Roman", "normal");
         doc.setFontSize(12);
 
-        doc.text(2, 4, `Họ và tên sinh viên: ${student?.user?.first_name}  ${student?.user?.last_name}`);
-        doc.text(10, 4, `Mã số sinh viên: ${student?.student_code}`);
-        doc.text(2, 4.6, `Lớp : ${student?.class?.name}`);
-        doc.text(6, 4.6, `Khóa : ${student?.class?.name?.substring(0, 3)}`);
-        doc.text(10, 4.6, `Khoa : ${student?.class?.major?.department?.name}`);
+        doc.text(2, 5, `Họ và tên sinh viên: ${student?.user?.first_name}  ${student?.user?.last_name}`);
+        doc.text(12, 5, `Mã số sinh viên: ${student?.student_code}`);
+        doc.text(2, 5.6, `Lớp : ${student?.class?.name}`);
+        doc.text(6, 5.6, `Khóa : ${student?.class?.name?.substring(0, 3)}`);
+        doc.text(10, 5.6, `Khoa : ${student?.class?.major?.department?.name}`);
 
         const columns = [
             {header: "Nội dung và tiêu chí đánh giá", dataKey: "title"},
@@ -133,6 +135,7 @@ const Point: React.FC<PointProps> = (props: PointProps) => {
             }
 
             const row = {
+                type: titleActivity.type,
                 title: titleActivity.title,
                 max_point: titleActivity.max_point || '',
                 point: titleActivity.point || '',
@@ -142,54 +145,67 @@ const Point: React.FC<PointProps> = (props: PointProps) => {
             return row;
         });
 
+        const tableSettings = {
+            theme: "grid",
+            bodyStyles: {lineColor: [0, 0, 0], lineWidth: 0.01, textColor: [0, 0, 0]},
+            startY: 6,
+            columnWidth: 'wrap',
+            columnStyles: {
+                title: {cellWidth: 8, halign: "justify", valign: "middle"},
+                max_point: {cellWidth: 2, halign: "center", valign: "middle"},
+                point: {cellWidth: 2, halign: "center", valign: "middle"},
+                reason: {cellWidth: 6, halign: "justify", valign: "middle"},
+            },
+            headStyles: { halign: "center", lineColor: [0, 0, 0], lineWidth: 0.01, fillColor: [255, 255, 255], textColor: [0, 0, 0]},
+            styles: {
+                font: "Times New Roman",
+                fontStyle: 'normal',
+                fontSize: 12,
+            },
+            didParseCell: (data) => {
+                const row = data.row.raw as any;
+                if (row.type !== 'third') data.cell.styles.fontStyle = "bold";
+            },
+        } as UserOptions;
+
         doc.autoTable(
             columns.filter(column => ["title", "max_point", "point", "reason"].includes(column.dataKey)),
             body,
-            {
-                startY: 5,
-                columnWidth: 'wrap',
-                columnStyles: {
-                    title: {cellWidth: 8, valign: "middle"},
-                    max_point: {cellWidth: 2, halign: "center", valign: "middle"},
-                    point: {cellWidth: 2, halign: "center", valign: "middle"},
-                    reason: {cellWidth: 6, valign: "middle"},
-                },
-                headStyles: { halign: "center" },
-                styles: {
-                    font: "Times New Roman",
-                    fontStyle: 'normal',
-                    fontSize: 12,
-                }
-            },
+            tableSettings,
         );
 
+        const guideTableSettings = {
+            theme: "grid",
+            bodyStyles: {lineColor: [0, 0, 0], lineWidth: 0.01, textColor: [0, 0, 0]},
+            startY: 2.5,
+            columnWidth: 'wrap',
+            columnStyles: {
+                title: {cellWidth: 10, halign: "justify", valign: "middle"},
+                description: {cellWidth: 8, halign: "justify", valign: "middle"},
+            },
+            headStyles: { halign: "center", lineColor: [0, 0, 0], lineWidth: 0.01, fillColor: [255, 255, 255], textColor: [0, 0, 0]},
+            styles: {
+                font: "Times New Roman",
+                fontStyle: 'normal',
+                fontSize: 12,
+            },
+            didParseCell: (data) => {
+                const row = data.row.raw as any;
+                if (row.type !== 'third') data.cell.styles.fontStyle = "bold";
+            },
+        } as UserOptions;
+
+        doc.setFont("Times New Roman", "bold");
         doc.addPage();
         doc.text(10, 2, "HƯỚNG DẪN CỘNG ĐIỂM", {align: "center"});
         doc.autoTable(
             columns.filter(column => ["title", "description"].includes(column.dataKey)),
             body,
-            {
-                startY: 3,
-                columnWidth: 'wrap',
-                columnStyles: {
-                    title: {cellWidth: 10, valign: "middle"},
-                    description: {cellWidth: 8, valign: "middle"},
-                },
-                headStyles: { halign: "center" },
-                styles: {
-                    font: "Times New Roman",
-                    fontStyle: 'normal',
-                    fontSize: 12,
-                }
-            },
+            guideTableSettings,
         );
+        doc.setFont("Times New Roman", "normal");
 
-        var string = doc.output('datauristring');
-        var embed = "<embed width='100%' height='100%' src='" + string + "'/>"
-        var x = window.open();
-        x?.document.open();
-        x?.document.write(embed);
-        x?.document.close();
+        doc.output('dataurlnewwindow', {filename: "Phiếu đánh giá điểm rèn luyện"});
     }
 
     return (
@@ -208,10 +224,18 @@ const Point: React.FC<PointProps> = (props: PointProps) => {
                         <Text>Lớp: {student?.class?.name}</Text>
                         <Text>Khóa: {student?.class?.name?.substring(0, 3)}</Text>
                         <Text>Khoa: {student?.class?.major?.department?.name}</Text>
+                        <Text>Điểm rèn luyện: {data?.data[data?.data.length - 1]?.point}</Text>
                     </Space>
                 </Space>
             </PageHeader>
-            <FullHeightTable columns={pointTableColumns} dataSource={data?.data} pagination={false} sticky bordered/>
+            <FullHeightTable
+                columns={pointTableColumns}
+                dataSource={data?.data}
+                pagination={false}
+                sticky
+                bordered
+                scroll={{y: 'calc(100vh - 325px)'}}
+            />
         </>
     );
 }

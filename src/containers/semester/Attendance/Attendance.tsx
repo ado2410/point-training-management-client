@@ -12,6 +12,8 @@ import {
     getClassesService,
 } from "./Attendance.services";
 import "../../../styles/styles.css";
+import { isStudent } from "../../../store/slices/auth/auth.constants";
+import { useSelector } from "react-redux";
 
 interface AttendanceProps {
     semesterId: number;
@@ -19,6 +21,7 @@ interface AttendanceProps {
 
 const Attendance: React.FC<AttendanceProps> = (props) => {
     const { semesterId } = props;
+    const auth = useSelector<StoreState, AuthState>(state => state.auth);
     const [searchParams, setSearchParams] = useSearchParams();
     const activityId = searchParams.get("activity") || undefined;
     const classId = searchParams.get("class") || undefined;
@@ -29,9 +32,7 @@ const Attendance: React.FC<AttendanceProps> = (props) => {
     const [activity, setActivity] = useState<Activity>();
 
     //Cập nhật columns trong table
-    const updateAttendanceTableColumns = (activities: Activity[]) => {
-        console.log(activities);
-        
+    const updateAttendanceTableColumns = (activities: Activity[]) => {        
         const fullyAttendanceTableColumns: any = [...attendanceTableColumns];
         activities.forEach((activity) => {
             fullyAttendanceTableColumns.push({
@@ -61,6 +62,7 @@ const Attendance: React.FC<AttendanceProps> = (props) => {
         if (activityId) {
             const activity: Activity = await getActivityService(activityId);
             activities = [activity];
+            setActivity(activity);
         } else {
             activities = (await getActivitiesService(semesterId, activityTypeId)).data;
             if (activity !== undefined) {
@@ -77,7 +79,8 @@ const Attendance: React.FC<AttendanceProps> = (props) => {
             setClasses(await getClassesService());
             updateAttendance();
         })();
-    }, [updateAttendance]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     //Cập nhật query params
     const updateSearchParams = (key: string, value: any) => {
@@ -96,33 +99,35 @@ const Attendance: React.FC<AttendanceProps> = (props) => {
     return (
         <>
             <PageHeader
-                className="attendance-page-header"
-                title="Điểm danh"
+                className="page-header"
+                title={`[${activity?.code}] ${activity?.name}`}
                 extra={
                     <>
-                        <Space style={{ width: "100%" }}>
-                            <span>Chọn lớp: </span>
-                            <Select
-                                style={{ width: "200px" }}
-                                value={parseInt(classId || '')}
-                                onChange={selectClass}
-                            >
-                                <Option value={null as any}>Hiển thị tất cả</Option>
-                                {classes?.data.map((_class, index) => (
-                                    <Option
-                                        key={index.toString()}
-                                        value={_class.id as any}
-                                    >
-                                        {_class.name}
-                                    </Option>
-                                ))}
-                            </Select>
-                        </Space>
+                        {!isStudent(auth) ?
+                            <Space style={{ width: "100%" }}>
+                                <span>Chọn lớp: </span>
+                                <Select
+                                    style={{ width: "200px" }}
+                                    value={(parseInt(classId || '') || null) as any}
+                                    onChange={selectClass}
+                                >
+                                    <Option value={null as any}>Hiển thị tất cả</Option>
+                                    {classes?.data.map((_class, index) => (
+                                        <Option
+                                            key={index.toString()}
+                                            value={_class.id as any}
+                                        >
+                                            {_class.name}
+                                        </Option>
+                                    ))}
+                                </Select>
+                            </Space>
+                        : <></>}
                     </>
                 }
             />
             <FullHeightTable
-                scroll={{ x: "max-content" }}
+                scroll={{ x: "max-content", y: "calc(100vh - 262px)" }}
                 components={{ body: { cell: EditableCell } }}
                 columns={columns}
                 dataSource={data?.data}

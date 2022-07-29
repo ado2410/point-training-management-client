@@ -19,4 +19,5 @@ interface IndexProps {
     canDelete?: ((record: any, index: number) => boolean) | boolean;
     onChange: () => void;
     filterData?: (item: any) => boolean;
+    tableProps?: Record<string, any>;
 }

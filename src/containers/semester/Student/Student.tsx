@@ -10,14 +10,17 @@ import {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { Option } from "antd/es/mentions";
-import { EditFilled, FileTextOutlined, SyncOutlined } from "@ant-design/icons";
+import { EditFilled, FileTextOutlined, LoadingOutlined, SyncOutlined } from "@ant-design/icons";
 import List from "../../../components/List/List";
-import { studentFormFields, studentTableColumns } from "./Student.constants";
-import { getClassesService, getStudentDataService, syncPointService, updateSemesterStudentService } from "./Student.services";
+import { semesterStudentCanEdit, studentFormFields, studentTableColumns } from "./Student.constants";
+import { getClassesService, getSemesterService, getStudentDataService, syncPointService, updateSemesterStudentService } from "./Student.services";
 import "../../../styles/styles.css";
 import "./Student.css";
 import CustomForm from "../../../components/CustomForm/CustomForm";
 import { handleServerError } from "../../../utils/error";
+import { useSelector } from "react-redux";
+import { formatDate } from "../../../utils/date";
+import Search from "../../../components/Search/Search";
 
 interface StudentProps {
     semesterId: number;
@@ -26,8 +29,10 @@ interface StudentProps {
 
 const Student: React.FC<StudentProps> = (props: StudentProps) => {
     const [searchParams, setSearchParams] = useSearchParams();
+    const auth = useSelector<StoreState, AuthState>(state => state.auth);
     const {semesterId} = props;
     const classId = searchParams.get("class") || undefined;
+    const keyword = searchParams.get("search") || undefined;
     const navigate = useNavigate();
     const [data, setData] = useState<ServerListData<Student>>({data: []});
     const [dataIndex, setDataIndex] = useState<number>(-1);
@@ -35,28 +40,36 @@ const Student: React.FC<StudentProps> = (props: StudentProps) => {
     const [classes, setClasses] = useState<ServerListData<Class>>({data: []});
     const [showModal, setShowModal] = useState(false);
     const [errors, setErrors] = useState<any>({});
+    const [semester, setSemester] = useState<Semester>();
+    const [syncing, setSyncing] = useState(false);
 
     useEffect(() => {
         (async () => {
             setClasses(await getClassesService());
-            getPoint();
+            setSemester(await getSemesterService(semesterId));
         })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    const getPoint = async (classId: string | undefined = undefined) => {
-        setData(await getStudentDataService(semesterId, classId));
+    useEffect(() => {
+        getStudents();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [searchParams]);
+
+    const getStudents = async () => {
+        setData(await getStudentDataService(semesterId, classId, keyword));
     };
 
     const updateSearchParams = (key: string, value: any) => {
         const params: any = {};
         searchParams.forEach((value, key) => (params[key] = value));
-        params[key] = value;
+        if (!value) delete params[key];
+        else params[key] = value;
         setSearchParams(params, { replace: true });
     };
 
     const selectClass = async (id: string) => {
         updateSearchParams("class", id);
-        getPoint(id);
     };
 
     const closeModal = () => {
@@ -68,17 +81,29 @@ const Student: React.FC<StudentProps> = (props: StudentProps) => {
         setShowModal(true);
     }
 
-    const handleUpdatePoint = () => {
+    const handleSearch = (value: string) => {
+        updateSearchParams("search", value);
+    }
+
+    const handleClearSearch = () => {
+        updateSearchParams("search", '');
+    }
+
+    const handleSyncPoint = () => {
         message.loading({content: "Đang đồng bộ", key: "semester-student-sync"});
+        setSyncing(true);
         syncPointService(
             semesterId,
-            () => {
+            async () => {
                 message.success({content: "Đã đồng bộ", key: "semester-student-sync"});
-                getPoint(classId);
+                getStudents();
+                setSemester(await getSemesterService(semesterId));
+                setSyncing(false);
                 props.onChange();
             },
             () => {
                 message.error({content: "Đồng bộ lỗi", key: "semester-student-sync"});
+                setSyncing(false);
             }
         )
     }
@@ -104,7 +129,7 @@ const Student: React.FC<StudentProps> = (props: StudentProps) => {
 
     const buttons = (record: any, index: number) => (
         <Space>
-            <Tooltip title="Xem phiếu điểm">
+            <Tooltip title="Xem đánh giá">
                 <Button
                     onClick={() =>
                         navigate(
@@ -112,15 +137,18 @@ const Student: React.FC<StudentProps> = (props: StudentProps) => {
                         )
                     }
                     icon={<FileTextOutlined />}
-                >
-                </Button>
-            </Tooltip>
-            <Tooltip title="Chỉnh sửa">
-                <Button
-                    icon={<EditFilled />}
-                    onClick={() => openModal(index)}
                 ></Button>
             </Tooltip>
+            {semesterStudentCanEdit(auth) ? (
+                <Tooltip title="Chỉnh sửa">
+                    <Button
+                        icon={<EditFilled />}
+                        onClick={() => openModal(index)}
+                    ></Button>
+                </Tooltip>
+            ) : (
+                <></>
+            )}
         </Space>
     );
 
@@ -131,27 +159,53 @@ const Student: React.FC<StudentProps> = (props: StudentProps) => {
                 title="Sinh viên"
                 extra={
                     <>
-                        <Button
-                            icon={<SyncOutlined />}
-                            onClick={handleUpdatePoint}
-                        >
-                            Đồng bộ điểm
-                        </Button>
+                        {semester?.sync_at ? (
+                            <i>
+                                Đồng bộ lần cuối lúc{" "}
+                                {formatDate(
+                                    semester?.sync_at,
+                                    "HH:mm DD/MM/YYYY"
+                                )}
+                            </i>
+                        ) : (
+                            <i>Chưa được đồng bộ</i>
+                        )}
+
+                        {syncing ? (
+                            <Button icon={<LoadingOutlined />} disabled>
+                                Đang đồng bộ
+                            </Button>
+                        ) : (
+                            <Button
+                                icon={<SyncOutlined />}
+                                onClick={handleSyncPoint}
+                            >
+                                Đồng bộ điểm
+                            </Button>
+                        )}
+                        
                         <Space className="class">
                             <span>Chọn lớp: </span>
                             <Select
                                 className="class-select"
-                                value={classId}
+                                value={classId || null}
                                 onChange={selectClass}
                             >
-                                <Option value={undefined}>Hiển thị tất cả</Option>
+                                <Option value={undefined}>
+                                    Hiển thị tất cả
+                                </Option>
                                 {classes.data.map((_class, index) => (
-                                    <Option key={index.toString()} value={_class.id.toString()}>
+                                    <Option
+                                        key={index.toString()}
+                                        value={_class.id.toString()}
+                                    >
                                         {_class.name}
                                     </Option>
                                 ))}
                             </Select>
                         </Space>
+
+                        <Search onSearch={handleSearch} onClearSearch={handleClearSearch} />
                     </>
                 }
             />
@@ -159,6 +213,7 @@ const Student: React.FC<StudentProps> = (props: StudentProps) => {
                 columns={studentTableColumns as any}
                 data={data.data}
                 buttons={buttons}
+                tableProps={{ scroll: { y: "calc(100vh - 262px)" } }}
             />
 
             <Modal

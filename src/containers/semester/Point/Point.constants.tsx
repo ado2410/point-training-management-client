@@ -4,7 +4,8 @@ export const pointTableColumns = [
         dataIndex: "title",
         key: "title",
         render: (text: string, record: PointThirdTitle) => {
-            if (record.type === "primary") return <b>{text.toUpperCase()}</b>;
+            if (record.type === "sum") return <b>{text.toUpperCase()}</b>;
+            else if (record.type === "primary") return <b>{text.toUpperCase()}</b>;
             else if (record.type === "secondary") return <b>{text}</b>;
             else return text;
         },
@@ -13,18 +14,21 @@ export const pointTableColumns = [
         title: "Điểm tối đa",
         dataIndex: "max_point",
         key: "max_point",
+        align: "center",
         width: 120,
     },
     {
         title: "Điểm mặc định",
         dataIndex: "default_point",
         key: "default_point",
+        align: "center",
         width: 130,
     },
     {
         title: "Điểm",
         dataIndex: "point",
         key: "point",
+        align: "center",
         width: 150,
     },
     {
@@ -39,7 +43,7 @@ export const pointTableColumns = [
         }
     },
     {
-        title: "Mục xét duyệt",
+        title: "Hoạt động đánh giá",
         dataIndex: "",
         key: "description",
         render: (_text: string, record: PointThirdTitle) => {

@@ -4,15 +4,17 @@ import {
     Row,
     Segmented,
     Space,
+    Typography,
 } from "antd";
 import {
     PieChartOutlined,
     TableOutlined,
 } from "@ant-design/icons";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import FullHeightTable from "../../../components/FullHeightTable/FullHeightTable";
 import { Bar } from "@ant-design/plots";
 import { sumByKey } from "../../../utils/array";
+import { getSemesterDashboardService } from "./DashboardCount.services";
 
 interface DashboardCountData {
     name: string;
@@ -27,9 +29,13 @@ interface DashboardCountData {
     grade6_count: number | string;
 }
 
+interface SemesterDashboard {
+    data: DashboardCountData[];
+}
+
 interface DashboardCountProps {
-    data: any[];
     semesterId: number;
+    height?: any;
 }
 
 enum SegmentedType {
@@ -45,12 +51,19 @@ enum DisplayType {
 };
 
 const DashboardCount: React.FC<DashboardCountProps> = (props: DashboardCountProps) => {
-    const {data} = props;
+    const { semesterId, height } = props;
+    const [semesterDashboard, setSemesterDashboard] = useState<SemesterDashboard>();
     const [segmentedType, setSegmentedType] = useState(
         SegmentedType.DEPARTMENT
     );
     const [structType, setStructType] = useState<StructType>(StructType.CHART);
     const [displayType, setDisplayType] = useState<DisplayType>(DisplayType.NUMBER);
+
+    useEffect(() => {
+        (async () => {
+            setSemesterDashboard(await getSemesterDashboardService(semesterId));
+        })();
+    }, [semesterId]);
 
     const studentDataColumns = [
         {
@@ -117,7 +130,7 @@ const DashboardCount: React.FC<DashboardCountProps> = (props: DashboardCountProp
 
     const getSegmentedSumData = (key: { label: string; dataIndex: string; }) => {
         return sumByKey(
-            data,
+            semesterDashboard?.data || [],
             key,
             [
                 "student_count",
@@ -315,7 +328,7 @@ const DashboardCount: React.FC<DashboardCountProps> = (props: DashboardCountProp
                     onChange={(value: any) => setSegmentedType(value)}
                 />
             </Space>
-            <Card>
+            <Card style={{paddingBottom: 5}}>
                 {structType === StructType.CHART && (
                     <Row
                         style={{ width: "100%"}}
@@ -323,14 +336,16 @@ const DashboardCount: React.FC<DashboardCountProps> = (props: DashboardCountProp
                     >
                         <Col
                             span={12}
-                            style={{ paddingLeft: 0, height: "calc(100vh - 270px)" }}
+                            style={{ paddingLeft: 0, height: height}}
                         >
+                            <Typography style={{textAlign: "center", marginBottom: 5}}>Số lượng sinh viên</Typography>
                             <Bar {...getStudentConfig()} />
                         </Col>
                         <Col
                             span={12}
-                            style={{ paddingRight: 0, height: "calc(100vh - 270px)" }}
+                            style={{ paddingRight: 0, height: height }}
                         >
+                            <Typography style={{textAlign: "center", marginBottom: 5}}>Điểm rèn luyện</Typography>
                             <Bar {...getPointConfig()} />
                         </Col>
                     </Row>
@@ -341,7 +356,7 @@ const DashboardCount: React.FC<DashboardCountProps> = (props: DashboardCountProp
                         bordered
                         columns={studentDataColumns}
                         dataSource={getSegmentedDataFluid()}
-                        scroll={{ x: "100%", y: "calc(100vh - 270px)" }}
+                        scroll={{ x: "100%", y: height }}
                         pagination={false}
                     />
                 )}
@@ -351,8 +366,8 @@ const DashboardCount: React.FC<DashboardCountProps> = (props: DashboardCountProp
 }
 
 DashboardCount.defaultProps = {
-    data: [],
     semesterId: 0,
+    height: "calc(100vh - 265px)",
 };
 
 export default DashboardCount;

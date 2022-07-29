@@ -18,6 +18,12 @@ export const renderPoint = (point: number) => {
     else return <Text style={{display: "inline"}} keyboard type="warning">0 điểm</Text>;
 }
 
+export const renderRawPoint = (point: number) => {
+    if (point > 0) return `+${point} điểm`;
+    else if (point < 0) return `${point} điểm`;
+    else return `0 điểm`;
+}
+
 export const getReason = (title: PointThirdTitle) => {
     if (title.type !== "third") return [];
     if (title.title_activities?.length === 0) return [];
@@ -104,10 +110,10 @@ export const getDescription = (title: PointThirdTitle) => {
                         <Typography>Không {getActivityTypeAction(activity.activity_type_id)}: {renderPoint(titleActivity.point[0])}</Typography>
                     </>
                 ),
-                text: `[${activity.code}] ${activity.name}\nCó ${getActivityTypeAction(activity.activity_type_id)}: ${titleActivity.point[1]}\nKhông ${getActivityTypeAction(activity.activity_type_id)}: ${titleActivity.point[0]}`,
+                text: `[${activity.code}] ${activity.name}\nCó ${getActivityTypeAction(activity.activity_type_id)}: ${renderRawPoint(titleActivity.point[1])}\nKhông ${getActivityTypeAction(activity.activity_type_id)}: ${renderRawPoint(titleActivity.point[0])}`,
             };
         } else if (activity.type === "COUNT") {
-            const optionString = titleActivity.options.map(option => `Nếu số lần ${getActivityTypeAction(activity.activity_type_id)} ${option.type} ${option.value} thì điểm ${option.point}`).join("\n");
+            const optionString = titleActivity.options.map(option => `Nếu số lần ${getActivityTypeAction(activity.activity_type_id)} ${markToString(option.type)} ${option.value} thì điểm ${renderRawPoint(option.point)}`).join("\n");
             return {
                 html: (
                     <>
@@ -125,7 +131,7 @@ export const getDescription = (title: PointThirdTitle) => {
             };
         }
         else if (activity.type === "POINT") {
-            const optionString = titleActivity.options.map(option => `Nếu ${getActivityTypeAction(activity.activity_type_id)} số điểm ${option.type} ${option.value} thì điểm ${option.point}`).join("\n");
+            const optionString = titleActivity.options.map(option => `Nếu ${getActivityTypeAction(activity.activity_type_id)} số điểm ${markToString(option.type)} ${option.value} thì điểm ${renderRawPoint(option.point)}`).join("\n");
             return {
                 html: (
                     <>

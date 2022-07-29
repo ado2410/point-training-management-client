@@ -17,6 +17,7 @@ import Container from "../../semester/Container/Container";
 import { useDispatch, useSelector } from "react-redux";
 import { logout } from "../../../store/slices/auth/auth.slice";
 import { UserType } from "../../../store/slices/auth/auth.constants";
+import Profile from "../../yearly/Profile/Profile";
 
 function Backend() {
     const navigate = useNavigate();
@@ -35,27 +36,31 @@ function Backend() {
         [UserType.ADMIN]: (
             <>
                 <Menu.Item key="/" icon={<PieChartOutlined />}>Thống kê</Menu.Item>
-                <Menu.Item key="/departments" icon={<ApartmentOutlined />}>Khoa</Menu.Item>
-                <Menu.Item key="/majors" icon={<ApartmentOutlined />}>Ngành học</Menu.Item>
-                <Menu.Item key="/classes" icon={<ApartmentOutlined />}>Lớp học</Menu.Item>
-                <Menu.Item key="/years" icon={<ApartmentOutlined />}>Năm học</Menu.Item>
-                <Menu.Item key="/groups" icon={<ApartmentOutlined />}>Nhóm</Menu.Item>
-                <Menu.SubMenu key="sub2" title="Quản lý tài khoản" icon={<IdcardOutlined />}>
+                <Menu.SubMenu key="sub1" title="Hệ thống" icon={<ApartmentOutlined />}>
+                    <Menu.Item key="/departments" icon={<ApartmentOutlined />}>Khoa</Menu.Item>
+                    <Menu.Item key="/majors" icon={<ApartmentOutlined />}>Ngành học</Menu.Item>
+                    <Menu.Item key="/classes" icon={<ApartmentOutlined />}>Lớp học</Menu.Item>
+                    <Menu.Item key="/years" icon={<ApartmentOutlined />}>Năm học</Menu.Item>
+                    <Menu.Item key="/groups" icon={<ApartmentOutlined />}>Nhóm</Menu.Item>
+                </Menu.SubMenu>
+                <Menu.SubMenu key="sub2" title="Tài khoản" icon={<IdcardOutlined />}>
                     <Menu.Item key="/users" icon={<UserOutlined/>}>Admin và NNL</Menu.Item>
                     <Menu.Item key="/students" icon={<UserOutlined/>}>Sinh viên</Menu.Item>
                 </Menu.SubMenu>
-                <Menu.Item key="/semesters" icon={<BarsOutlined/>}>Quản lý hoạt động</Menu.Item>
+                <Menu.Item key="/semesters" icon={<BarsOutlined/>}>Hoạt động</Menu.Item>
                 <Menu.Item icon={<LogoutOutlined />} onClick={handleLogout}>Đăng xuất</Menu.Item>
             </>
         ),
         [UserType.IMPORTER]: (
             <>
-                <Menu.Item key="/semesters" icon={<BarsOutlined/>}>Quản lý hoạt động</Menu.Item>
+                <Menu.Item key="/" icon={<UserOutlined/>}>Thông tin cá nhân</Menu.Item>
+                <Menu.Item key="/semesters" icon={<BarsOutlined/>}>Hoạt động</Menu.Item>
                 <Menu.Item icon={<LogoutOutlined />} onClick={handleLogout}>Đăng xuất</Menu.Item>
             </>
         ),
         [UserType.STUDENT]: (
             <>
+                <Menu.Item key="/" icon={<UserOutlined/>}>Thông tin cá nhân</Menu.Item>
                 <Menu.Item key="/semesters" icon={<BarsOutlined/>}>Hoạt động</Menu.Item>
                 <Menu.Item icon={<LogoutOutlined />} onClick={handleLogout}>Đăng xuất</Menu.Item>
             </>
@@ -67,11 +72,18 @@ function Backend() {
         ),
     };
 
+    const home = {
+        [UserType.ADMIN]: <Dashboard />,
+        [UserType.IMPORTER]: <Profile />,
+        [UserType.STUDENT]: <Profile />,
+        CLIENT: <></>,
+    }
+
     return (
         <Layout className="root">
-            <Sider>
+            <Sider collapsible>
                 <div className="sider-top">
-                    <Typography.Title level={3} className="sider-top-text" style={{color: "white"}}>ADMIN</Typography.Title>
+                    <Typography.Title level={3} className="sider-top-text" style={{color: "white"}}>UDCK</Typography.Title>
                 </div>
                 <Menu
                     theme="dark"
@@ -99,7 +111,7 @@ function Backend() {
                 </Header>
                 <Content className="main" style={{padding: 10}}>
                     <Routes>
-                        <Route path="/"element={<Dashboard/>}/>
+                        <Route path="/"element={auth.userType ? home[auth.userType] : home.CLIENT}/>
                         <Route path="/users"element={<User/>}/>
                         <Route path="/departments"element={<Department/>}/>
                         <Route path="/majors"element={<Major/>}/>
@@ -111,7 +123,6 @@ function Backend() {
                         <Route path="/semesters/:semesterId/*" element={<Container/>}/>
                     </Routes>
                 </Content>
-                <Typography className="footer">@2022 Hệ thống quản lý điểm rèn luyện sinh viên tại UDCK</Typography>
             </Layout>
         </Layout>
     );

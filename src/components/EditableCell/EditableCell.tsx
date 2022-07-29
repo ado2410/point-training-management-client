@@ -82,7 +82,16 @@ const EditableCell: React.FC<EditableCellProps> = (props: EditableCellProps) => 
                     type="number"
                     defaultValue={value}
                     onBlur={toggleEditing}
-                    onChange={(e) => saveChange(record.id, activity.id, e.target.value)}
+                    onKeyDown={(e: any) => {
+                        if (e.key === "Enter") {
+                            const value = e.target.value;
+                            // eslint-disable-next-line eqeqeq
+                            const editedValue = (activity.type === "COUNT" ? (value == 0 ? 0 : parseInt(value)) : value) || value;
+                            e.target.value = editedValue;
+                            saveChange(record.id, activity.id, editedValue);
+                            setEditing(false);
+                        }
+                    }}
                 />
             );
         } else {

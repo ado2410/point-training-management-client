@@ -41,11 +41,12 @@ const Import: React.FC<ImportProps> = (props: ImportProps) => {
     const [workbook, setWorkbook] = useState<WorkBook>();
     const [rawData, setRawData] = useState<any[]>([]);
     const [data, setData] = useState<any[]>([]);
-    const [previewPage, setPreviewPage] = useState<number>();
-    const [previewPageSize, setPreviewPageSize] = useState<number>();
+    const [previewPage, setPreviewPage] = useState<number>(1);
+    const [previewPageSize, setPreviewPageSize] = useState<number>(20);
 
     useEffect(() => {
         if (step === Step.PREVIEW) previewFile();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [errors, previewPage, previewPageSize]);
 
     const importFile = (file: Blob) => {
@@ -96,7 +97,7 @@ const Import: React.FC<ImportProps> = (props: ImportProps) => {
                 //Render
                 column.render = (text, _record, index) => (
                     <>
-                        <Typography>{text}</Typography>
+                        <Typography key={index}>{text}</Typography>
                         {errors!
                             .filter(
                                 (error) =>
@@ -104,8 +105,8 @@ const Import: React.FC<ImportProps> = (props: ImportProps) => {
                                     error.index === index + ((previewPage! - 1) * previewPageSize!)
                             )
                             .map((error, i) => (
-                                <Typography>
-                                    <Text key={i} type="danger" italic>
+                                <Typography key={i}>
+                                    <Text type="danger" italic>
                                         {error.message}
                                     </Text>
                                 </Typography>
@@ -152,27 +153,29 @@ const Import: React.FC<ImportProps> = (props: ImportProps) => {
                 key: "",
                 dataIndex: "",
                 columnIndex: "",
+                align: "center",
                 width: 70,
                 render: (_text: string, _record: any, index: number) =>
-                    index + 1,
+                    index + ((previewPage! - 1) * previewPageSize!) + 1
             },
-            ...columns!,
+            ...columns! as any,
         ].filter((column) => !column.hidden);
         return (
             <Space
                 direction="vertical"
-                style={{ width: "100%", flexGrow: 1, alignItems: "center" }}
+                style={{ width: "100%", alignItems: "center" }}
             >
                 <Table
-                    //pagination={false}
+                    pagination={{defaultPageSize: 20}}
                     sticky
                     columns={previewColumns}
                     dataSource={rawData}
                     scroll={scroll}
                     onChange={(pagination) => {
-                        setPreviewPage(pagination.current);
-                        setPreviewPageSize(pagination.pageSize);
+                        setPreviewPage(pagination.current || 1);
+                        setPreviewPageSize(pagination.pageSize || 20);
                     }}
+                    size="small"
                 />
                 <Space>
                     <Button onClick={() => setStep(Step.IMPORT)}>

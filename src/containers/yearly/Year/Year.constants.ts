@@ -1,5 +1,5 @@
 export const yearRoutes = [
-    {name: "Quản lý hoạt động", path: "/years"},
+    {name: "Quản lý năm học", path: "/years"},
 ];
 
 export const yearTableColumns = [

@@ -1,19 +1,49 @@
-import { Input } from "antd";
+import { Input, Typography } from "antd";
 import moment from "moment";
 import { getActivityType, getActivityTypeAction } from "../../../utils/activity";
+import { formatDate } from "../../../utils/date";
 
 export const preInsertAndUpdate = (values: any) => {
     values.accepts = Array.isArray(values.accepts) ? values.array : values.accepts ? values.accepts.replaceAll(", ", ",").split(",") : null;
     values.default_value = values.default_value || 0;
     values.attendance = {};
-    values.attendance.open = values.attendance_open;
-    values.attendance.start = moment(values.attendance_start).format('YYYY-MM-DD HH:mm:ss');
-    values.attendance.end = moment(values.attendance_end).format('YYYY-MM-DD HH:mm:ss');
+    values.attendance_open = values.attendance_open || false;
+    values.attendance.open = values.attendance_open || false;
+    values.attendance.start = values.attendance_start ? moment(values.attendance_start).format('YYYY-MM-DD HH:mm:ss') : null;
+    values.attendance.end = values.attendance_end ? moment(values.attendance_end).format('YYYY-MM-DD HH:mm:ss') : null;
     values.attendance.level = values.attendance_level;
     values.attendance.departments = values.attendance_departments;
+    values.attendance.classes = values.attendance_classes;
     values.attendance.positions = values.attendance_positions;
     return values;
 }
+
+export const showTimeDescription = (record:Activity) => {
+    let text = <></>;
+    const start = formatDate(record.time_start, "HH:mm DD/MM/YYYY");
+    const end = formatDate(record.time_end, "HH:mm DD/MM/YYYY");
+    if (start && end) text = <>Từ {start} đến {end}</>;
+    else if (end) text = <> Đến hết ngày {end}</>;
+    else if (start) text = <> Bắt đầu từ ngày {start}</>;
+    else text = <>Cả học kỳ</>;
+    return <div><b>Thời gian</b>: {text}</div>
+}
+
+export const showAttendanceDescription = (record: Activity) => {
+    if (record.attendance.open === true) {
+        let text = <></>;
+        let start = formatDate(record.attendance.start, "HH:mm DD/MM/YYYY");
+        let end = formatDate(record.attendance.end, "HH:mm DD/MM/YYYY");
+        if (record.attendance.start && record.attendance.end)
+            text = <>Từ {start} tới {end}</>;
+        else if (record.attendance.start) text = <>Mở từ ngày {start}</>;
+        else if (record.attendance.end) text = <>Tới {end}</>;
+        else text = <>Không có thời hạn</>;
+        return <div><b>Thời hạn đánh giá: </b> {text}</div>;
+    } else return '';
+}
+
+export const activityCanModifyAttendance = (record: Activity) => Boolean(record.can_modify_attendance);
 
 export const activityCanModify = (record: Activity) => Boolean(record.can_modify);
 
@@ -24,6 +54,7 @@ export const activityTableColumns = (activityTypeId: number) => {
             title: `Mã ${activityType}`,
             dataIndex: "code",
             key: "code",
+            width: 150,
         },
         {
             title: `Tên ${activityType}`,
@@ -31,32 +62,18 @@ export const activityTableColumns = (activityTypeId: number) => {
             key: "name",
         },
         {
-            title: "Thời gian",
-            dataIndex: "time_start",
-            key: "time_start",
-            render: (_text: string, record: Activity) => {
-                const time_start = record.time_start !== null ? moment(record.time_start?.slice(0, -1)).format("DD/MM/YYYY") : null;
-                const time_end = record.time_end !== null ? moment(record.time_end?.slice(0, -1)).format("DD/MM/YYYY") : null;
-                if (time_start && time_end) return <>Từ {time_start} đến {time_end}</>
-                else if (!time_start && !time_end) return <>Cả học kỳ</>
-                else if (time_end) return <> Đến hết ngày {time_end}</>
-                else if (time_start) return <> Bắt đầu từ ngày {time_start}</>
-            }
-        },
-        {
-            title: "Địa chỉ",
-            dataIndex: "address",
-            key: "address",
-        },
-        {
-            title: "Đơn vị tổ chức",
-            dataIndex: "host",
-            key: "host",
-        },
-        {
             title: "Mô tả",
             dataIndex: "description",
             key: "description",
+            render: (text: string, record: Activity) => (
+                <>
+                    <Typography><b>Mô tả: </b>{record.description ? record.description : 'Không có mô tả'}</Typography>
+                    <Typography><b>Địa chỉ: </b>{record.address ? record.address : 'Không có địa chỉ'}</Typography>
+                    <Typography><b>Đơn vị tổ chức: </b>{record.host ? record.host : 'Không biết đơn vị tổ chức'}</Typography>
+                    {showTimeDescription(record)}
+                    {showAttendanceDescription(record)}
+                </>
+            ),
         },
     ];
 };
@@ -141,7 +158,7 @@ export const activityFormFields = (semesterId: number, activityTypeId: number): 
             inputType: "number",
             initialValue: 0,
             hide: (values) => {
-                return values?.type !== "COUNT"
+                return values?.type !== "COUNT" && values?.type !== "POINT"
             },
         },
         {
@@ -162,12 +179,12 @@ export const activityFormFields = (semesterId: number, activityTypeId: number): 
             component: <Input.TextArea style={{height: 100}}/>,
         },
         {
-            label: "Điểm danh",
+            label: "Mở đánh giá",
             name: "",
             type: "divider",
         },
         {
-            label: "Mở điểm danh",
+            label: "Mở đánh giá",
             name: "attendance_open",
             dataIndex: ["attendance", "open"],
             type: "switch",

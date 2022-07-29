@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import '../styles/styles.css';
 import List from "../components/List/List";
 import { Button, Input, message, Modal, PageHeader } from "antd";
@@ -8,6 +8,7 @@ import Import from "../components/Import/Import";
 import CustomBreadcrumb from "../components/CustomBreadcrumb/CustomBreadcrumb";
 import { copyService, deleteService, getDataService, getOptionsService, importService, insertService, updateService } from "./Index.services";
 import { handleServerError, handleServerErrorImport } from "../utils/error";
+import Search from "../components/Search/Search";
 
 enum ModalType {
     NONE, CREATE, EDIT, DELETE, IMPORT, COPY
@@ -33,8 +34,8 @@ const Index = (props: IndexProps) => {
         canEdit,
         canDelete,
         filterData,
+        tableProps,
     } = props;
-    const [keyword, setKeyword] = useState("");
     const [data, setData] = useState<ServerListData<any>>({data: []});
     const [dataIndex, setDataIndex] = useState(-1);
     const currentData = useMemo(() => data.data[dataIndex], [data.data, dataIndex]);
@@ -58,12 +59,11 @@ const Index = (props: IndexProps) => {
     const getOptions = async () => await getOptionsService(route);
 
     //Tìm kiếm
-    const search = async (value: string) => setData((await getData(value)));
+    const handleSearch = async (value: string) => setData((await getData(value)));
 
     //CLear tìm kiếm
-    const clearSearch = async () => {
+    const handleClearSearch = async () => {
         setData((await getData()));
-        setKeyword("");
     };
 
     //Close form
@@ -73,6 +73,16 @@ const Index = (props: IndexProps) => {
         setErrors([]);
         setImportErrors([]);
     };
+
+    const handleFilter = () => {
+        data.data = data.data.map((item, index) => {
+            item._originalIndex = index;
+            return item;
+        })
+        if (filterData) {
+            return data.data.filter(filterData);
+        } else return data.data;
+    }
 
     //Xử lý insert
     const handleInsert = (values: any) => {
@@ -130,7 +140,7 @@ const Index = (props: IndexProps) => {
                 closeForm();
                 message.success({key: "index-delete", content: "Đã xoá"});
             },
-            () => message.error({key: "index-delete", content: "Lỗi"})
+            () => message.error({key: "index-delete", content: "Bản ghi không thể xoá"})
         );
     };
 
@@ -184,7 +194,7 @@ const Index = (props: IndexProps) => {
                 breadcrumb={<CustomBreadcrumb routes={routes} />}
                 extra={
                     <>
-                        {(canCreate && Boolean(createFields)) && (
+                        {canCreate && Boolean(createFields) && (
                             <Button
                                 onClick={() => setShowModal(ModalType.CREATE)}
                                 icon={<PlusOutlined />}
@@ -201,42 +211,29 @@ const Index = (props: IndexProps) => {
                             </Button>
                         )}
                         {props.buttons}
-                        <div className="index-page-header-search">
-                            <Input.Search
-                                value={keyword}
-                                placeholder="Tìm kiếm..."
-                                style={{ width: 200 }}
-                                onChange={(e) => setKeyword(e.target.value)}
-                                onSearch={search}
-                            />
-                            {keyword && (
-                                <Button
-                                    icon={<UndoOutlined />}
-                                    onClick={clearSearch}
-                                />
-                            )}
-                        </div>
+                        <Search onSearch={handleSearch} onClearSearch={handleClearSearch} />
                     </>
                 }
             />
 
             <List
-                data={filterData ? data.data.filter(filterData) : data.data}
+                tableProps={tableProps}
+                data={handleFilter()}
                 columns={columns}
                 canCopy={canCopy}
                 canEdit={canEdit}
                 canDelete={canDelete}
-                onUpdate={(_record, index) => {
-                    setDataIndex(index);
+                onUpdate={(record) => {
+                    setDataIndex(record._originalIndex);
                     setShowModal(ModalType.EDIT);
                 }}
                 buttons={props.listButtons}
-                onDelete={(_record, index) => {
-                    setDataIndex(index);
+                onDelete={(record) => {
+                    setDataIndex(record._originalIndex);
                     setShowModal(ModalType.DELETE);
                 }}
-                onCopy={(_record, index) => {
-                    setDataIndex(index);
+                onCopy={(record) => {
+                    setDataIndex(record._originalIndex);
                     setShowModal(ModalType.COPY);
                 }}
             />
@@ -367,6 +364,7 @@ Index.defaultProps = {
     canEdit: true,
     canDelete: true,
     onChange: () => {},
+    tableProps: {},
 };
 
 export default Index;

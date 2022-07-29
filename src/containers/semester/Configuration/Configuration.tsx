@@ -6,16 +6,25 @@ import "../../../styles/styles.css";
 import { configurationTableColumns } from "./Configuration.constants";
 import { getConfigurationDataService, getSemesterService, saveConfigurationService } from "./Configuration.services";
 import { flattenTitles } from "./Configuration.actions";
+import { getDescription } from "../Point/Point.actions";
+import { useSelector } from "react-redux";
 
 const Configuration: React.FC<ConfigurationProps> = (props: ConfigurationProps) => {
     const {semesterId} = props;
     const [data, setData] = useState<ServerListData<CustomThirdTitle>>({data: []});
     const [semester, setSemester] = useState<Semester>(undefined as unknown as Semester);
     const [thirdTitleActivity, setThirdTitleActivity] = useState<CustomThirdTitle>();
+    const auth = useSelector<StoreState, AuthState>(state => state.auth);
 
     const updateConfigurationData = useCallback(async () => {
         const responseData = (await getConfigurationDataService(semesterId));
         const flattenedData = flattenTitles(responseData.data.primary_titles);
+
+        flattenedData.map((item: any) => {
+            item.description = getDescription(item as any);
+            return item;
+        });
+
         data.data = flattenedData;
         setData({...data});
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -72,6 +81,7 @@ const Configuration: React.FC<ConfigurationProps> = (props: ConfigurationProps) 
                 data.data.forEach((title) => {
                     if (title.type === "third" && title.id === thirdTitleActivity?.id)
                         title.title_activities = responseData;
+                        title.description = getDescription(title as any) as any;
                 });
                 setData(data);
                 closeThirdTitleActivity();
@@ -89,10 +99,11 @@ const Configuration: React.FC<ConfigurationProps> = (props: ConfigurationProps) 
             />
 
             <FullHeightTable
-                columns={configurationTableColumns(openThirdTitleActivity)}
+                columns={configurationTableColumns(openThirdTitleActivity, auth)}
                 dataSource={data.data}
                 pagination={false}
                 sticky
+                scroll={{y: "calc(100vh - 262px)"}}
             />
 
             <Modal

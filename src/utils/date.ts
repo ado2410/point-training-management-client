@@ -5,7 +5,8 @@ export function excelDateToJSDate(excelDate: number): Date {
     return date;
 }
 
-export function formatDate(ISODate: string): string {
-    if (ISODate) return moment(ISODate.slice(0, -1)).format("DD/MM/YYYY");
+export function formatDate(date: string | undefined, format: string  = "DD/MM/YYYY"): string {
+    if (date?.charAt(date.length - 1) === 'Z') date = date.slice(0, -1);
+    if (date) return moment(date).format(format);
     return '';
 }

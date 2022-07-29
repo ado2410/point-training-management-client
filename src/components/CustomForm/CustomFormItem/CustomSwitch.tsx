@@ -2,12 +2,12 @@ import {Switch } from "antd";
 import CustomFormItem from "./CustomFormItem";
 
 const CustomSwitch: React.FC<CustomCheckProps> = (props: CustomCheckProps) => {
-    const { defaultChecked } = props;
+    const { defaultChecked, disabled } = props;
 
     return (
         <CustomFormItem
             {...props}
-            component={<Switch defaultChecked={defaultChecked} />}
+            component={<Switch defaultChecked={defaultChecked} disabled={disabled} />}
         />
     );
 };

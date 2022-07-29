@@ -29,6 +29,7 @@ interface CustomSelectOption {
 interface CustomTreeSelectOption {
     id: string | number;
     name: string;
+    disabled?: boolean;
     children: CustomTreeSelectOption[];
 }
 

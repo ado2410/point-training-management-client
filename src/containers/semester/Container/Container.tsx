@@ -1,6 +1,7 @@
 import { Col, Menu, PageHeader, Row } from "antd";
 import { Route, Routes, useNavigate, useParams } from "react-router-dom";
 import {
+    BarsOutlined,
     FileDoneOutlined,
     FileTextOutlined,
     FrownOutlined,
@@ -22,6 +23,8 @@ import Point from "../Point/Point";
 import { getSemesterService } from "./Container.services";
 import { UserType } from "../../../store/slices/auth/auth.constants";
 import { useSelector } from "react-redux";
+import ImportActivity from "../ImportActivity/ImportActivity";
+import SemesterIO from "../SemesterIO/SemesterIO";
 
 interface MenuItemLabelProps {
     left: any;
@@ -68,7 +71,7 @@ function Container() {
                 <Menu.Item key="" icon={<PieChartOutlined />}>
                     Thống kê
                 </Menu.Item>
-                <Menu.Item key="students" icon={<FileTextOutlined />}>
+                <Menu.Item key="students" icon={<BarsOutlined />}>
                     <MenuItemLabel
                         left="Sinh viên"
                         right={semester?.studentCount}
@@ -107,22 +110,31 @@ function Container() {
                         />
                     </Menu.Item>
                 </Menu.SubMenu>
+                <Menu.Item key="configurations" icon={<FileTextOutlined />}>
+                        Cấu hình điểm
+                </Menu.Item>
                 <Menu.SubMenu
                     key="sub2"
-                    title="Tuỳ chỉnh"
+                    title="Cài đặt"
                     icon={<SettingOutlined />}
                 >
-                    <Menu.Item key="configurations" icon={<SettingOutlined />}>
-                        Cấu hình điểm
-                    </Menu.Item>
                     <Menu.Item key="settings" icon={<SettingOutlined />}>
-                        Cài đặt
+                        Cài đặt chung
+                    </Menu.Item>
+                    <Menu.Item key="import_activities" icon={<SettingOutlined />}>
+                        Nhập danh sách hoạt động
+                    </Menu.Item>
+                    <Menu.Item key="semester_io" icon={<SettingOutlined />}>
+                        Nhập/Xuất dữ liệu
                     </Menu.Item>
                 </Menu.SubMenu>
             </>
         ),
         [UserType.IMPORTER]: (
             <>
+                <Menu.Item key="" icon={<PieChartOutlined />}>
+                    Thống kê
+                </Menu.Item>
                 <Menu.Item key="students" icon={<FileTextOutlined />}>
                     <MenuItemLabel
                         left="Sinh viên"
@@ -162,27 +174,21 @@ function Container() {
                         />
                     </Menu.Item>
                 </Menu.SubMenu>
-                <Menu.SubMenu
-                    key="sub2"
-                    title="Tuỳ chỉnh"
-                    icon={<SettingOutlined />}
-                >
-                    <Menu.Item key="configurations" icon={<SettingOutlined />}>
-                        Cấu hình điểm
-                    </Menu.Item>
-                    <Menu.Item key="settings" icon={<SettingOutlined />}>
-                        Cài đặt
-                    </Menu.Item>
-                </Menu.SubMenu>
+                <Menu.Item key="configurations" icon={<FileTextOutlined />}>
+                    Cấu hình điểm
+                </Menu.Item>
             </>
         ),
         [UserType.STUDENT]: (
             <>
+                <Menu.Item key="" icon={<PieChartOutlined />}>
+                    Thống kê
+                </Menu.Item>
                 <Menu.Item
                     key={`students/point?semester=${semesterId}&student=${auth.user?.student?.id}`}
                     icon={<FileDoneOutlined />}
                 >
-                    Điểm rèn luyện
+                    Kết quả rèn luyện
                 </Menu.Item>
                 <Menu.SubMenu
                     key="sub1"
@@ -229,56 +235,56 @@ function Container() {
                     backgroundColor: "white",
                     marginBottom: 10,
                 }}
-                title={
-                    semesterId
-                        ? "Hoạt động từng học kỳ"
-                        : "Hoạt động thường niên"
-                }
+                title={`Hoạt động học kỳ ${semester?.name} năm học ${semester?.year?.name}`}
                 breadcrumb={
                     <CustomBreadcrumb
                         routes={[
-                            { name: "Quản lý hoạt động", path: "/years" },
+                            { name: "Quản lý hoạt động", path: "/semesters" },
                             {
-                                name: `Năm học ${semester?.year?.name}`,
-                                path: `/semesters?year=${semester?.year?.id}`,
-                            },
-                            {
-                                name: `Học kỳ ${semester?.name}`,
-                                path: `/activity_types?semester=${semester?.id}`,
+                                name: `Học kỳ ${semester?.name} năm học ${semester?.year?.name}`,
+                                path: `/semesters/${semester?.id}`,
                             },
                         ]}
                     />
                 }
             />
 
-            <Row style={{ width: "100%" }} gutter={[16, 16]}>
+            <Row style={{ width: "100%" }}>
                 <Col span={4}>
                     <Menu
-                        theme="dark"
+                        theme="light"
                         mode="inline"
                         defaultSelectedKeys={[""]}
                         defaultOpenKeys={[""]}
                         onClick={handleClickMenu}
-                        style={{ height: "calc(100vh - 240px)" }}
+                        style={{ height: "calc(100vh - 190px)" }}
                     >
                         {auth.userType ? menus[auth.userType] : <></>}
                     </Menu>
                 </Col>
 
-                <Col span={20}>
+                <Col span={20} style={{paddingLeft: "10px"}}>
                     <Routes>
                         <Route
                             path=""
                             element={
                                 <DashboardCount
                                     semesterId={semesterId}
-                                    data={semester?.data || []}
+                                    height="calc(100vh - 276px)"
                                 />
                             }
                         />
                         <Route
                             path="settings"
                             element={<Setting semesterId={semesterId} onChange={handleUpdate} />}
+                        />
+                        <Route
+                            path="import_activities"
+                            element={<ImportActivity semesterId={semesterId} onChange={handleUpdate} />}
+                        />
+                        <Route
+                            path="semester_io"
+                            element={<SemesterIO semesterId={semesterId} onChange={handleUpdate} />}
                         />
                         <Route
                             path="activities"

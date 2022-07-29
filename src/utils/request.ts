@@ -27,8 +27,6 @@ request.interceptors.request.use(
 request.interceptors.response.use(
     (config) => config,
     (error) => {
-        console.log(error.response.data.key);
-        
         switch (error.response.data.key) {
             case "ACCESS-TOKEN-EXPIRED":
                 break;

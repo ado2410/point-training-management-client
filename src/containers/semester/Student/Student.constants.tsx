@@ -1,4 +1,7 @@
+import { isAdmin } from "../../../store/slices/auth/auth.constants";
 import { formatDate } from "../../../utils/date";
+
+export const semesterStudentCanEdit = (auth:AuthState) => isAdmin(auth);
 
 export const studentTableColumns = [
     {
@@ -50,7 +53,7 @@ export const studentTableColumns = [
         }
     },
     {
-        title: "Điểm",
+        title: "Điểm rèn luyện",
         dataIndex: ["semester_student", "point"],
         key: "point",
         render: (text: string) => !text ? "Chưa cập nhật" : text,

@@ -20,8 +20,8 @@ function Group() {
             name={`Nhóm ${group ? group.name : ''}`}
             routes={groupRoutes}
             columns={groupTableColumns}
-            createFields={groupFormFields(group)}
-            editFields={groupFormFields(group)}
+            createFields={groupFormFields(groupId)}
+            editFields={groupFormFields(groupId)}
         />
     );
 }

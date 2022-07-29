@@ -1,19 +1,30 @@
 import { Link } from "react-router-dom";
+import { isStudent } from "../../../store/slices/auth/auth.constants";
 
 export const semesterRoutes = [
-    {name: "Quản lý hoạt động", path: "/years"},
+    {name: "Quản lý hoạt động", path: "/semesters"},
 ];
 
-export const semesterTableColumns = [
+export const semesterTableColumns = (auth: AuthState) => [
     {
         title: "Tên",
         dataIndex: "name",
         key: "name",
         render: (text: string, record: Semester) => (
-            <Link to={`/semesters/${record.id}`}>
-                Học kỳ {text} năm học {record.year?.name}
-            </Link>
+            record.settings.status === "public" || !isStudent(auth) ? (
+                <Link to={`/semesters/${record.id}`}>
+                    Học kỳ {text} năm học {record.year?.name}
+                </Link>
+            ) : (
+                <>Học kỳ {text} năm học {record.year?.name}</>
+            )
         ),
+    },
+    {
+        title: "Trạng thái",
+        dataIndex: ["settings", "status"],
+        key: "status",
+        render: (text: string, record: Semester) => record.settings.status === "public" ? "Không khai" : "Riêng tư",
     },
 ];
 

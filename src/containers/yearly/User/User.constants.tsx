@@ -6,11 +6,6 @@ export const userRoutes = [
 
 export const userTableColumns = [
     {
-        title: "Thuộc nhóm",
-        dataIndex: ["group", "name"],
-        key: "group",
-    },
-    {
         title: "Tên tài khoản",
         dataIndex: "username",
         key: "username",

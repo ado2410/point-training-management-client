@@ -14,10 +14,11 @@ interface ListProps {
     canCopy?: ((record: any, index: number) => boolean) | boolean;
     canEdit?: ((record: any, index: number) => boolean) | boolean;
     canDelete?: ((record: any, index: number) => boolean) | boolean;
+    tableProps?: Record<string, any>;
 }
 
 const List: React.FC<ListProps> = (props: ListProps) => {
-    const {columns, data, buttons, canCopy, canEdit, canDelete, onCopy, onUpdate, onDelete} = props;
+    const {columns, data, buttons, canCopy, canEdit, canDelete, onCopy, onUpdate, onDelete, tableProps} = props;
     const [page, setPage] = useState(1);
     const [pageSize, setPageSize] = useState(1);
 
@@ -83,9 +84,12 @@ const List: React.FC<ListProps> = (props: ListProps) => {
 
     return (
             <FullHeightTable
+            {...tableProps}
             dataSource={data}
             columns={fullColumns}
             pagination={{
+                defaultPageSize: 20,
+                ...tableProps,
                 onChange: (currentPage: number, currentPageSize: number) => {
                     setPage(currentPage || page);
                     setPageSize(currentPageSize || pageSize);
@@ -105,6 +109,7 @@ List.defaultProps = {
     canCopy: false,
     canEdit: false,
     canDelete: false,
+    tableProps: {},
 };
 
 export default List;

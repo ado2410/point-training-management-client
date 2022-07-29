@@ -10,6 +10,7 @@ interface SettingOption {
 
 interface SettingLoadValues {
     semester: boolean;
+    semester_student: boolean;
     activity: boolean;
     title_activity: boolean;
     student_activity: boolean;
